@@ -164,11 +164,72 @@ story.append(make_table(
     [3.0 * cm, 5.4 * cm, 8.1 * cm]))
 
 # ---------------- 5. Datasets & formats ----------------
-story.append(P("5. Required Datasets &amp; File Formats", "H1x"))
+story.append(P("5. Drone (UAV) Platform &amp; Payload Sensor Requirements", "H1x"))
+story.append(P("5.1 Minimum UAV platform requirements", "H2x"))
+story.append(make_table(
+    ["Requirement", "Minimum specification", "Why it matters"],
+    [
+        ["Airframe type", "Multirotor (quadcopter) with stabilized 3-axis gimbal",
+         "Hovering and slow orbits around blades; steady captures in gusts."],
+        ["Payload capacity", "&gt;= 350 g (integrated sensor) or &gt;= 900 g (M300/M350-class for external payloads)",
+         "Must carry the multispectral sensor plus irradiance (DLS) module."],
+        ["Flight endurance", "&gt;= 25–30 min per battery (with payload)",
+         "One full blade (3 sides) or one site grid per battery swap."],
+        ["Positioning", "RTK/PPK GNSS, 1–3 cm accuracy (base station or NTRIP)",
+         "Repeatable, georeferenced captures for epoch-to-epoch change detection."],
+        ["Wind tolerance", "&gt;= 12 m/s sustained",
+         "Wind farm sites are windy by definition; inspection windows are short."],
+        ["Obstacle sensing", "Omnidirectional avoidance + safety geofence",
+         "Flying within 5–15 m of blades and tower."],
+        ["Mission software", "Waypoint / orbit automation with terrain follow (open protocols: MAVLink preferred)",
+         "Repeatable automated inspection paths; integration with OpenDroneMap outputs."],
+        ["Regulatory", "Registered platform, remote-ID; pilot licensed per DGCA/FAA/EASA class",
+         "Legal operation near tall structures."],
+    ],
+    [3.2 * cm, 6.6 * cm, 6.7 * cm]))
+
+story.append(P("5.2 Payload sensor options (named) and minimum sensor specification", "H2x"))
+story.append(make_table(
+    ["Payload sensor (Name)", "Bands", "Resolution / GSD", "Notes"],
+    [
+        ["DJI Mavic 3M (Mavic 3 Multispectral) — integrated",
+         "RGB + 4 MS bands (G 560, R 650, RE 730, NIR 860 nm)",
+         "5 MP MS; ~5 cm/px @ 60 m",
+         "Minimum-budget entry; RTK module included; sunlight sensor on top."],
+        ["MicaSense RedEdge-P (external payload)",
+         "5 MS bands (B, G, R, RedEdge, NIR) + panchro",
+         "1.6 MP/band; ~2 cm/px @ 60 m (pan-sharpened)",
+         "Industry standard for inspection; global shutter; DLS 2 irradiance sensor."],
+        ["MicaSense Altum-PT (external payload)",
+         "5 MS bands + panchro + thermal LWIR",
+         "3.2 MP/band MS; 320x256 thermal",
+         "Adds thermal for electrical/structural hotspots; heavier (577 g)."],
+        ["Sentera 6X (external payload)",
+         "5 MS bands + RGB",
+         "3.2 MP/band",
+         "Alternative vendor; global shutter; open SDK."],
+        ["Parrot Sequoia+ (legacy option)",
+         "4 MS bands + RGB",
+         "1.2 MP/band",
+         "Budget/legacy; acceptable for vegetation products only, not fine blade defects."],
+    ],
+    [4.2 * cm, 4.2 * cm, 3.7 * cm, 4.4 * cm]))
+story.append(Spacer(1, 0.2 * cm))
+story.append(P("<b>Minimum sensor specification for this project:</b> &gt;= 5 spectral "
+               "bands including Red-Edge and NIR (400–1000 nm); global shutter; "
+               "&gt;= 1.2 MP per band; downwelling light/irradiance sensor (DLS) and "
+               "calibrated reflectance panel for radiometric correction; GPS-tagged "
+               "16-bit TIFF output. <b>Minimum viable configuration:</b> DJI Mavic 3M "
+               "(all-in-one, blade + site products). <b>Recommended full configuration:</b> "
+               "DJI Matrice 350 RTK carrying MicaSense Altum-PT (multispectral + thermal "
+               "in one flight)."))
+
+# ---------------- 6. Datasets & formats ----------------
+story.append(P("6. Required Datasets &amp; File Formats", "H1x"))
 story.append(P("The table below lists every dataset the project consumes or "
                "produces, with its source, file format and extension."))
 
-story.append(P("5.1 Input datasets", "H2x"))
+story.append(P("6.1 Input datasets", "H2x"))
 story.append(make_table(
     ["Dataset (Name)", "Source / Sensor", "Format", "Extension(s)"],
     [
@@ -202,7 +263,7 @@ story.append(make_table(
     ],
     [4.6 * cm, 4.0 * cm, 4.4 * cm, 3.5 * cm]))
 
-story.append(P("5.2 Labels, models and intermediate data", "H2x"))
+story.append(P("6.2 Labels, models and intermediate data", "H2x"))
 story.append(make_table(
     ["Dataset (Name)", "Produced by", "Format", "Extension(s)"],
     [
@@ -224,7 +285,7 @@ story.append(make_table(
     ],
     [4.6 * cm, 4.0 * cm, 4.4 * cm, 3.5 * cm]))
 
-story.append(P("5.3 Output / deliverable datasets", "H2x"))
+story.append(P("6.3 Output / deliverable datasets", "H2x"))
 story.append(make_table(
     ["Dataset (Name)", "Consumed by", "Format", "Extension(s)"],
     [
@@ -253,20 +314,20 @@ story.append(P("Conventions: all rasters are EPSG-referenced GeoTIFFs (Cloud-Opt
                "e.g. <i>WF01_T07_20260723_ndvi.tif</i>."))
 
 # ---------------- 6. Sample outputs ----------------
-story.append(P("6. Sample Outputs (Synthetic Demonstration Images)", "H1x"))
+story.append(P("7. Sample Outputs (Synthetic Demonstration Images)", "H1x"))
 story.append(P("The images below are synthetic samples generated with NumPy + "
                "Matplotlib to illustrate the expected products. Production outputs "
                "will use real UAV and Sentinel-2 data processed through the stack "
                "in Section 4 over the datasets in Section 5."))
 
-story.append(P("6.1 Site analysis product — multispectral bands and NDVI", "H2x"))
+story.append(P("7.1 Site analysis product — multispectral bands and NDVI", "H2x"))
 img1 = Image(f"{OUT}/site_ndvi_sample.png", width=16.5 * cm, height=4.55 * cm)
 story.append(img1)
 story.append(Paragraph("Figure 1 — Simulated green/red/NIR reflectance and derived NDVI over a wind farm site. "
                        "Turbine symbols mark asset locations; low-NDVI areas (water body, bare soil) are "
                        "automatically excluded from vegetation-compliance monitoring.", styles["Cap"]))
 
-story.append(P("6.2 Blade inspection product — NIR capture and automated defect mask", "H2x"))
+story.append(P("7.2 Blade inspection product — NIR capture and automated defect mask", "H2x"))
 img2 = Image(f"{OUT}/blade_defect_sample.png", width=15.5 * cm, height=8.25 * cm)
 story.append(img2)
 story.append(Paragraph("Figure 2 — Simulated UAV NIR image of a blade (top) and the automated anomaly "
@@ -274,7 +335,7 @@ story.append(Paragraph("Figure 2 — Simulated UAV NIR image of a blade (top) an
                        "zone are flagged in red with yellow region-of-interest markers.", styles["Cap"]))
 
 # ---------------- 5. Pipeline ----------------
-story.append(P("7. Processing Pipeline", "H1x"))
+story.append(P("8. Processing Pipeline", "H1x"))
 story.append(make_table(
     ["Step", "Stage", "Open-source tools"],
     [
@@ -289,7 +350,7 @@ story.append(make_table(
     [1.2 * cm, 7.6 * cm, 7.7 * cm]))
 
 # ---------------- 6. Deliverables ----------------
-story.append(P("8. Deliverables", "H1x"))
+story.append(P("9. Deliverables", "H1x"))
 for b in [
     "D1 — Calibrated multispectral orthomosaics per turbine/site (GeoTIFF).",
     "D2 — Defect detection layer with severity classes (GeoPackage/PostGIS).",
@@ -301,7 +362,7 @@ for b in [
     story.append(B(b))
 
 # ---------------- 7. Standards & assumptions ----------------
-story.append(P("9. Standards, Assumptions &amp; Constraints", "H1x"))
+story.append(P("10. Standards, Assumptions &amp; Constraints", "H1x"))
 for b in [
     "Inspection practice aligned with IEC 61400 series and DNV-GL blade inspection guidance.",
     "UAV operations subject to local aviation (e.g. DGCA/FAA/EASA) rules; flights only in permitted wind conditions.",
