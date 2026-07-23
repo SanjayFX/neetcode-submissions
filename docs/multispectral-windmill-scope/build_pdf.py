@@ -87,8 +87,47 @@ for b in [
 ]:
     story.append(B(b))
 
-# ---------------- 2. Scope ----------------
-story.append(P("2. In-Scope Work Packages", "H1x"))
+# ---------------- 2. Multispectral imagery in wind applications ----------------
+story.append(P("2. Multispectral Imagery in Wind Applications", "H1x"))
+story.append(P("Multispectral sensors capture reflectance in discrete bands beyond "
+               "human vision — typically Blue, Green, Red, Red-Edge and Near-Infrared "
+               "(400–1000 nm), optionally extended with SWIR and thermal-IR. Because "
+               "materials such as composite gel coat, moisture, ice, corrosion, "
+               "vegetation and bare soil each have distinct spectral signatures, "
+               "band ratios and indices reveal conditions that ordinary RGB imagery "
+               "misses. The main application areas across the wind energy lifecycle are:"))
+story.append(make_table(
+    ["Application Area", "What multispectral imagery provides"],
+    [
+        ["Blade inspection &amp; damage detection",
+         "Cracks, leading-edge erosion, delamination, pitting and coating degradation; "
+         "NIR/SWIR reveals moisture ingress and bonding defects under the gel coat; "
+         "lightning-strike burn signatures; ice detection on blades for de-icing decisions."],
+        ["Thermal &amp; structural health monitoring",
+         "Combined with thermal-IR: hotspots in nacelle, gearbox, generator and electrical "
+         "junctions; internal blade flaws via thermal gradients; corrosion on tower and flanges."],
+        ["Site selection &amp; pre-construction survey",
+         "Land cover / land use classification from Sentinel-2 or Landsat; soil moisture and "
+         "terrain indicators for foundations and access roads; NDVI/EVI ecological baselines; "
+         "surface roughness input to wind-flow modelling."],
+        ["Environmental &amp; ecological monitoring",
+         "Vegetation-health change detection around the farm; bird/bat habitat mapping for "
+         "curtailment planning; erosion and drainage monitoring; periodic compliance reports."],
+        ["Operations &amp; maintenance optimization",
+         "Repeatable UAV fleet-wide blade scans with minimal downtime; spectral trend analysis "
+         "for predictive maintenance; digital-twin integration; rapid post-storm triage."],
+        ["Wake &amp; vegetation studies",
+         "Vegetation stress patterns downstream of turbines (microclimate/wake effects); "
+         "agricultural coexistence studies on leased land."],
+        ["Offshore-specific applications",
+         "Marine growth / biofouling on foundations; coating breakdown in the splash zone; "
+         "sediment-plume monitoring during construction (phase 2)."],
+    ],
+    [4.6 * cm, 11.9 * cm]))
+story.append(Spacer(1, 0.2 * cm))
+
+# ---------------- 3. Scope ----------------
+story.append(P("3. In-Scope Work Packages", "H1x"))
 story.append(make_table(
     ["WP", "Work Package", "Description"],
     [
@@ -105,7 +144,7 @@ story.append(P("Out of scope (phase 1): SCADA data fusion, offshore marine-growt
                "monitoring, real-time onboard (edge) inference, LiDAR integration.", "Body"))
 
 # ---------------- 3. Open-source stack ----------------
-story.append(P("3. Open-Source Software Stack", "H1x"))
+story.append(P("4. Open-Source Software Stack", "H1x"))
 story.append(make_table(
     ["Layer", "Tool (License)", "Role in this project"],
     [
@@ -127,20 +166,20 @@ story.append(make_table(
 story.append(PageBreak())
 
 # ---------------- 4. Sample outputs ----------------
-story.append(P("4. Sample Outputs (Synthetic Demonstration Images)", "H1x"))
+story.append(P("5. Sample Outputs (Synthetic Demonstration Images)", "H1x"))
 story.append(P("The images below are synthetic samples generated with NumPy + "
                "Matplotlib to illustrate the expected products. Production outputs "
                "will use real UAV and Sentinel-2 data processed through the stack "
-               "in Section 3."))
+               "in Section 4."))
 
-story.append(P("4.1 Site analysis product — multispectral bands and NDVI", "H2x"))
+story.append(P("5.1 Site analysis product — multispectral bands and NDVI", "H2x"))
 img1 = Image(f"{OUT}/site_ndvi_sample.png", width=16.5 * cm, height=4.55 * cm)
 story.append(img1)
 story.append(Paragraph("Figure 1 — Simulated green/red/NIR reflectance and derived NDVI over a wind farm site. "
                        "Turbine symbols mark asset locations; low-NDVI areas (water body, bare soil) are "
                        "automatically excluded from vegetation-compliance monitoring.", styles["Cap"]))
 
-story.append(P("4.2 Blade inspection product — NIR capture and automated defect mask", "H2x"))
+story.append(P("5.2 Blade inspection product — NIR capture and automated defect mask", "H2x"))
 img2 = Image(f"{OUT}/blade_defect_sample.png", width=15.5 * cm, height=8.25 * cm)
 story.append(img2)
 story.append(Paragraph("Figure 2 — Simulated UAV NIR image of a blade (top) and the automated anomaly "
@@ -148,7 +187,7 @@ story.append(Paragraph("Figure 2 — Simulated UAV NIR image of a blade (top) an
                        "zone are flagged in red with yellow region-of-interest markers.", styles["Cap"]))
 
 # ---------------- 5. Pipeline ----------------
-story.append(P("5. Processing Pipeline", "H1x"))
+story.append(P("6. Processing Pipeline", "H1x"))
 story.append(make_table(
     ["Step", "Stage", "Open-source tools"],
     [
@@ -163,7 +202,7 @@ story.append(make_table(
     [1.2 * cm, 7.6 * cm, 7.7 * cm]))
 
 # ---------------- 6. Deliverables ----------------
-story.append(P("6. Deliverables", "H1x"))
+story.append(P("7. Deliverables", "H1x"))
 for b in [
     "D1 — Calibrated multispectral orthomosaics per turbine/site (GeoTIFF).",
     "D2 — Defect detection layer with severity classes (GeoPackage/PostGIS).",
@@ -175,7 +214,7 @@ for b in [
     story.append(B(b))
 
 # ---------------- 7. Standards & assumptions ----------------
-story.append(P("7. Standards, Assumptions &amp; Constraints", "H1x"))
+story.append(P("8. Standards, Assumptions &amp; Constraints", "H1x"))
 for b in [
     "Inspection practice aligned with IEC 61400 series and DNV-GL blade inspection guidance.",
     "UAV operations subject to local aviation (e.g. DGCA/FAA/EASA) rules; flights only in permitted wind conditions.",
