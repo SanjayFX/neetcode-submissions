@@ -349,20 +349,118 @@ story.append(make_table(
     ],
     [1.2 * cm, 7.6 * cm, 7.7 * cm]))
 
-# ---------------- 6. Deliverables ----------------
-story.append(P("9. Deliverables", "H1x"))
+# ---------------- 9. Workflow & methodology ----------------
+story.append(P("9. Workflow &amp; Methodology Adopted", "H1x"))
+story.append(P("Delivery follows an <b>agile, phased methodology</b>: the analytics "
+               "components (WP3–WP4) use a <b>CRISP-DM adapted loop</b> (business "
+               "understanding → data understanding → preparation → modelling → "
+               "evaluation → deployment), while field operations follow a fixed, "
+               "auditable inspection workflow per campaign. Every stage has an "
+               "entry criterion, an exit (QA) gate and a named artefact, so a "
+               "campaign is traceable end-to-end."))
+
+story.append(P("9.1 End-to-end inspection workflow (per campaign)", "H2x"))
+story.append(make_table(
+    ["#", "Workflow step", "Method / procedure", "Exit gate → artefact"],
+    [
+        ["1", "Campaign planning",
+         "Select turbines/site; define flight plans (orbit per blade side, lawn-mower grid for site); check weather window and permits.",
+         "Approved flight plan → mission file (.kmz/.plan)"],
+        ["2", "Pre-flight calibration",
+         "Capture reflectance panel; verify DLS; RTK fix confirmed; sensor self-test.",
+         "Calibration checklist passed → panel images (.tif)"],
+        ["3", "Data acquisition",
+         "Automated waypoint flight; 75–85% overlap; GSD per product spec; turbine stopped &amp; locked for blade scans.",
+         "Coverage check on-site → raw band captures (.tif)"],
+        ["4", "Ingest &amp; preprocessing",
+         "Radiometric correction, band alignment, orthomosaic (OpenDroneMap); reflectance conversion.",
+         "QA-1 data gate → calibrated orthomosaic (.tif)"],
+        ["5", "Analytics &amp; detection",
+         "Index computation (NDVI/NDRE); ML inference for defect classes; severity grading rules.",
+         "QA-2 model gate → defect layer (.gpkg)"],
+        ["6", "Human review (QA)",
+         "Analyst reviews flagged defects in QGIS/dashboard; confirms, edits or rejects each detection.",
+         "QA-3 review gate → verified defect register (.csv)"],
+        ["7", "Reporting &amp; handover",
+         "Automated PDF report; dashboard update; export to CMMS; archive with lineage metadata.",
+         "AC sign-off → campaign report (.pdf)"],
+    ],
+    [0.8 * cm, 3.2 * cm, 7.2 * cm, 5.3 * cm]))
+
+story.append(P("9.2 ML model development methodology (CRISP-DM adapted)", "H2x"))
+for b in [
+    "Data understanding — exploratory band statistics on pilot flights; label taxonomy fixed with O&amp;M engineers (crack, erosion, moisture, lightning, other).",
+    "Preparation — tiling, augmentation, band-stacking; 70/15/15 train/validation/test split, stratified by turbine and defect class; test set frozen before training.",
+    "Modelling — baseline classical CV first (thresholds/morphology), then U-Net segmentation and YOLO detection; experiments tracked in MLflow (open source).",
+    "Evaluation — metrics on the frozen test set only (Section 10 AC thresholds); error review board with a blade engineer before any release.",
+    "Deployment — versioned ONNX export; inference in the Airflow pipeline; shadow-mode run for one campaign before replacing the incumbent model.",
+    "Monitoring — drift checks on band histograms and detection rates each campaign; retraining triggered when AC metrics degrade.",
+]:
+    story.append(B(b))
+
+# ---------------- 10. QA & Acceptance criteria ----------------
+story.append(P("10. Quality Assurance (QA) &amp; Acceptance Criteria (AC) Report", "H1x"))
+story.append(P("QA is enforced at three gates in the workflow (Section 9.1); a "
+               "campaign is accepted only when every AC in the table below is met. "
+               "Each campaign produces a QA/AC report recording the measured value "
+               "against each criterion, signed by the analyst and the client's "
+               "O&amp;M representative."))
+
+story.append(P("10.1 QA gates and checks", "H2x"))
+story.append(make_table(
+    ["Gate", "Scope", "Checks performed"],
+    [
+        ["QA-1 — Data quality",
+         "Raw captures &amp; orthomosaic",
+         "Image sharpness (blur metric), exposure/histogram sanity, band-to-band alignment error, forward/side overlap achieved, GSD achieved, radiometric panel deviation, GNSS fix quality, coverage completeness vs flight plan."],
+        ["QA-2 — Model output",
+         "Indices &amp; ML detections",
+         "Index value ranges plausible (NDVI within [-1, 1], no saturation), detection confidence distribution reviewed, per-class counts vs historical norms, no empty/failed tiles, model version and checksum logged."],
+        ["QA-3 — Human review",
+         "Defect register",
+         "100% of Severity 3+ detections reviewed by analyst; &gt;=20% random sample of lower severities; inter-analyst agreement spot-checks; final register free of duplicates and geometry errors."],
+    ],
+    [3.4 * cm, 3.4 * cm, 9.7 * cm]))
+
+story.append(P("10.2 Acceptance criteria (AC)", "H2x"))
+story.append(make_table(
+    ["ID", "Acceptance criterion", "Threshold", "Verification method"],
+    [
+        ["AC-1", "Blade coverage per inspected turbine", "&gt;= 95% of blade surface imaged (all 3 blades, both sides + leading/trailing edge)", "Coverage map vs blade CAD footprint"],
+        ["AC-2", "Ground sample distance (blade products)", "&lt;= 3 mm/px on blade surfaces", "EXIF/flight-log distance &amp; sensor model"],
+        ["AC-3", "Ground sample distance (site products)", "&lt;= 10 cm/px", "Orthomosaic metadata"],
+        ["AC-4", "Georeferencing accuracy", "&lt;= 10 cm RMSE horizontal (RTK), &lt;= 2 px co-registration between epochs", "Check-point residuals report"],
+        ["AC-5", "Radiometric calibration", "Panel-derived reflectance within ±5% of certified values per band", "Calibration report per flight"],
+        ["AC-6", "Defect detection recall (Severity 3+)", "&gt;= 90% on frozen test set and field-verified sample", "Confusion matrix in QA/AC report"],
+        ["AC-7", "Defect detection precision (all classes)", "&gt;= 80% (false positives &lt;= 20%)", "Confusion matrix in QA/AC report"],
+        ["AC-8", "Human review completion", "100% Severity 3+, &gt;= 20% sample of lower severities", "Review log export"],
+        ["AC-9", "Report turnaround", "Draft report &lt;= 3 working days after last flight; final &lt;= 5 after review", "Timestamps in Airflow lineage"],
+        ["AC-10", "Data completeness &amp; lineage", "All deliverables present, named per convention, with STAC metadata and checksums", "Automated manifest validation"],
+    ],
+    [1.5 * cm, 5.1 * cm, 5.5 * cm, 4.4 * cm]))
+story.append(Spacer(1, 0.2 * cm))
+story.append(P("<b>QA/AC report contents (per campaign):</b> campaign summary "
+               "(site, turbines, dates, crew, weather), flight log table, QA-1/2/3 "
+               "gate results with measured values, AC table with pass/fail per "
+               "criterion, confusion matrix and metric plots, deviations &amp; "
+               "waivers with justification, and sign-off block (analyst, QA lead, "
+               "client representative). The report is generated automatically by "
+               "the ReportLab pipeline and archived alongside the campaign data."))
+
+# ---------------- 11. Deliverables ----------------
+story.append(P("11. Deliverables", "H1x"))
 for b in [
     "D1 — Calibrated multispectral orthomosaics per turbine/site (GeoTIFF).",
     "D2 — Defect detection layer with severity classes (GeoPackage/PostGIS).",
     "D3 — NDVI / land-cover / change-detection maps for environmental compliance.",
     "D4 — Web dashboard (Leaflet/Streamlit) with per-turbine inspection history.",
-    "D5 — Automated PDF inspection reports (per flight campaign).",
+    "D5 — Automated PDF inspection reports with QA/AC section (per flight campaign).",
     "D6 — Reproducible open-source pipeline (containerized, Apache Airflow DAGs).",
 ]:
     story.append(B(b))
 
 # ---------------- 7. Standards & assumptions ----------------
-story.append(P("10. Standards, Assumptions &amp; Constraints", "H1x"))
+story.append(P("12. Standards, Assumptions &amp; Constraints", "H1x"))
 for b in [
     "Inspection practice aligned with IEC 61400 series and DNV-GL blade inspection guidance.",
     "UAV operations subject to local aviation (e.g. DGCA/FAA/EASA) rules; flights only in permitted wind conditions.",
