@@ -163,23 +163,110 @@ story.append(make_table(
     ],
     [3.0 * cm, 5.4 * cm, 8.1 * cm]))
 
-story.append(PageBreak())
+# ---------------- 5. Datasets & formats ----------------
+story.append(P("5. Required Datasets &amp; File Formats", "H1x"))
+story.append(P("The table below lists every dataset the project consumes or "
+               "produces, with its source, file format and extension."))
 
-# ---------------- 4. Sample outputs ----------------
-story.append(P("5. Sample Outputs (Synthetic Demonstration Images)", "H1x"))
+story.append(P("5.1 Input datasets", "H2x"))
+story.append(make_table(
+    ["Dataset (Name)", "Source / Sensor", "Format", "Extension(s)"],
+    [
+        ["UAV multispectral blade/tower captures",
+         "MicaSense RedEdge-MX / Altum-PT, DJI Mavic 3M (5–7 bands)",
+         "16-bit GeoTIFF per band; raw sensor capture", ".tif / .tiff, .dng"],
+        ["Radiometric calibration panel images",
+         "Same UAV sensor, pre/post-flight panel shots",
+         "16-bit TIFF + panel reflectance sheet", ".tif, .csv"],
+        ["Sentinel-2 L2A scenes (site &amp; environment)",
+         "ESA Copernicus Open Access / AWS Open Data",
+         "SAFE archive with JPEG2000 band files, XML metadata", ".SAFE (folder), .jp2, .xml"],
+        ["Landsat 8/9 Collection-2 Level-2 scenes",
+         "USGS EarthExplorer",
+         "Cloud-Optimized GeoTIFF + MTL metadata", ".tif, .txt / .xml (MTL)"],
+        ["Digital elevation model (terrain)",
+         "Copernicus DEM GLO-30 / SRTM",
+         "GeoTIFF raster", ".tif"],
+        ["Turbine asset registry &amp; farm boundary",
+         "Operator GIS / survey",
+         "Vector layers (points, polygons)", ".gpkg, .shp (+.dbf/.shx/.prj), .geojson"],
+        ["UAV flight logs &amp; telemetry",
+         "Flight controller export",
+         "Tabular log / GPS track", ".csv, .log, .gpx"],
+        ["Weather &amp; wind data (QA filtering)",
+         "ERA5 reanalysis / met mast",
+         "NetCDF grids or tables", ".nc, .csv"],
+        ["Public blade-defect training data (e.g. DTU 'Nordtank' turbine inspection images)",
+         "DTU Data / Mendeley open repositories",
+         "Annotated RGB/NIR images", ".jpg, .png"],
+    ],
+    [4.6 * cm, 4.0 * cm, 4.4 * cm, 3.5 * cm]))
+
+story.append(P("5.2 Labels, models and intermediate data", "H2x"))
+story.append(make_table(
+    ["Dataset (Name)", "Produced by", "Format", "Extension(s)"],
+    [
+        ["Defect annotation labels",
+         "Manual labelling (QGIS / CVAT / Label Studio)",
+         "COCO JSON, YOLO text labels, mask rasters", ".json, .txt, .png"],
+        ["Calibrated reflectance orthomosaics",
+         "OpenDroneMap / WebODM (WP2)",
+         "Multi-band Cloud-Optimized GeoTIFF", ".tif"],
+        ["Index rasters (NDVI / NDRE / EVI)",
+         "NumPy / xarray pipeline (WP3)",
+         "Single-band GeoTIFF; gridded stacks", ".tif, .nc"],
+        ["Trained ML model weights",
+         "PyTorch / YOLO training (WP4)",
+         "Serialized weights; portable inference model", ".pt / .pth, .onnx"],
+        ["Anomaly / defect masks",
+         "OpenCV + model inference (WP4)",
+         "Binary/label mask rasters", ".png, .tif"],
+    ],
+    [4.6 * cm, 4.0 * cm, 4.4 * cm, 3.5 * cm]))
+
+story.append(P("5.3 Output / deliverable datasets", "H2x"))
+story.append(make_table(
+    ["Dataset (Name)", "Consumed by", "Format", "Extension(s)"],
+    [
+        ["Defect detection layer (geometry + severity class)",
+         "QGIS, web dashboard, CMMS",
+         "GeoPackage / GeoJSON vector layers; PostGIS tables", ".gpkg, .geojson (+ SQL)"],
+        ["Land-cover &amp; change-detection maps",
+         "Environmental compliance reporting",
+         "GeoTIFF raster + style file", ".tif, .qml / .sld"],
+        ["Inspection report per campaign",
+         "O&amp;M engineers, asset owners",
+         "PDF report; tabular defect register", ".pdf, .csv / .xlsx"],
+        ["Web map tiles &amp; dashboard layers",
+         "GeoServer / Leaflet / Streamlit",
+         "XYZ/WMTS tile cache, MBTiles", ".png (tiles), .mbtiles"],
+        ["Pipeline metadata &amp; lineage",
+         "Airflow / audit",
+         "Run logs, STAC item metadata", ".json, .log"],
+    ],
+    [4.6 * cm, 4.0 * cm, 4.4 * cm, 3.5 * cm]))
+story.append(Spacer(1, 0.2 * cm))
+story.append(P("Conventions: all rasters are EPSG-referenced GeoTIFFs (Cloud-Optimized "
+               "where served over the web); vectors default to GeoPackage (.gpkg) to avoid "
+               "multi-file shapefile handling; naming pattern "
+               "<i>&lt;site&gt;_&lt;turbine&gt;_&lt;date&gt;_&lt;product&gt;.&lt;ext&gt;</i>, "
+               "e.g. <i>WF01_T07_20260723_ndvi.tif</i>."))
+
+# ---------------- 6. Sample outputs ----------------
+story.append(P("6. Sample Outputs (Synthetic Demonstration Images)", "H1x"))
 story.append(P("The images below are synthetic samples generated with NumPy + "
                "Matplotlib to illustrate the expected products. Production outputs "
                "will use real UAV and Sentinel-2 data processed through the stack "
-               "in Section 4."))
+               "in Section 4 over the datasets in Section 5."))
 
-story.append(P("5.1 Site analysis product — multispectral bands and NDVI", "H2x"))
+story.append(P("6.1 Site analysis product — multispectral bands and NDVI", "H2x"))
 img1 = Image(f"{OUT}/site_ndvi_sample.png", width=16.5 * cm, height=4.55 * cm)
 story.append(img1)
 story.append(Paragraph("Figure 1 — Simulated green/red/NIR reflectance and derived NDVI over a wind farm site. "
                        "Turbine symbols mark asset locations; low-NDVI areas (water body, bare soil) are "
                        "automatically excluded from vegetation-compliance monitoring.", styles["Cap"]))
 
-story.append(P("5.2 Blade inspection product — NIR capture and automated defect mask", "H2x"))
+story.append(P("6.2 Blade inspection product — NIR capture and automated defect mask", "H2x"))
 img2 = Image(f"{OUT}/blade_defect_sample.png", width=15.5 * cm, height=8.25 * cm)
 story.append(img2)
 story.append(Paragraph("Figure 2 — Simulated UAV NIR image of a blade (top) and the automated anomaly "
@@ -187,7 +274,7 @@ story.append(Paragraph("Figure 2 — Simulated UAV NIR image of a blade (top) an
                        "zone are flagged in red with yellow region-of-interest markers.", styles["Cap"]))
 
 # ---------------- 5. Pipeline ----------------
-story.append(P("6. Processing Pipeline", "H1x"))
+story.append(P("7. Processing Pipeline", "H1x"))
 story.append(make_table(
     ["Step", "Stage", "Open-source tools"],
     [
@@ -202,7 +289,7 @@ story.append(make_table(
     [1.2 * cm, 7.6 * cm, 7.7 * cm]))
 
 # ---------------- 6. Deliverables ----------------
-story.append(P("7. Deliverables", "H1x"))
+story.append(P("8. Deliverables", "H1x"))
 for b in [
     "D1 — Calibrated multispectral orthomosaics per turbine/site (GeoTIFF).",
     "D2 — Defect detection layer with severity classes (GeoPackage/PostGIS).",
@@ -214,7 +301,7 @@ for b in [
     story.append(B(b))
 
 # ---------------- 7. Standards & assumptions ----------------
-story.append(P("8. Standards, Assumptions &amp; Constraints", "H1x"))
+story.append(P("9. Standards, Assumptions &amp; Constraints", "H1x"))
 for b in [
     "Inspection practice aligned with IEC 61400 series and DNV-GL blade inspection guidance.",
     "UAV operations subject to local aviation (e.g. DGCA/FAA/EASA) rules; flights only in permitted wind conditions.",
