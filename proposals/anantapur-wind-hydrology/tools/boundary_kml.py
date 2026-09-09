@@ -44,6 +44,8 @@ import math
 import os
 import re
 import sys
+import sqlite3
+import struct
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -400,6 +402,56 @@ def load(path, order):
     raise SystemExit(f"Unsupported input type: {ext}")
 
 
+
+# ---------------------------------------------------------------- GeoPackage
+def _gpkg_polygon(outer, inners, srs=4326):
+    """Encode a ring (plus holes) as a GeoPackageBinary blob."""
+    def ring(r):
+        b = struct.pack('<I', len(r) + 1)
+        for la, lo in list(r) + [r[0]]:
+            b += struct.pack('<dd', lo, la)      # WKB is x,y = lon,lat
+        return b
+    rings = [outer] + list(inners)
+    wkb = struct.pack('<BI', 1, 3) + struct.pack('<I', len(rings))
+    wkb += b"".join(ring(r) for r in rings)
+    return b'GP' + bytes([0, 0b00000001]) + struct.pack('<i', srs) + wkb
+
+
+def write_to_gpkg(path, polys, rows, lat0, lon0):
+    """Insert the boundary into the study GeoPackage's `boundary` layer and
+    refresh the layer extent recorded in gpkg_contents."""
+    if not os.path.exists(path):
+        raise SystemExit(f"GeoPackage not found: {path}")
+    con = sqlite3.connect(path)
+    try:
+        con.execute("SELECT 1 FROM gpkg_contents WHERE table_name='boundary'").fetchone()
+    except sqlite3.Error as e:
+        con.close()
+        raise SystemExit(f"{path} does not look like the study GeoPackage: {e}")
+
+    con.execute("DELETE FROM boundary")           # boundary is authoritative, not additive
+    today = __import__('datetime').date.today().isoformat()
+    for poly, r in zip(polys, rows):
+        con.execute(
+            "INSERT INTO boundary (geom, name, source, received_on, gross_area_sqkm,"
+            " excluded_sqkm, net_area_sqkm, net_area_ha, net_area_acres,"
+            " perimeter_km, datum, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (_gpkg_polygon(poly["outer"], poly["inners"]), r["polygon"],
+             os.path.basename(sys.argv[1]), today, r["gross_sqkm"],
+             r["excluded_sqkm"], r["net_sqkm"], r["net_ha"], r["net_acres"],
+             r["perimeter_km"], "WGS84 (EPSG:4326)",
+             "Area on the WGS84 ellipsoid, Lambert Azimuthal Equal-Area"))
+
+    pts = [p for poly in polys for p in poly["outer"]]
+    con.execute("UPDATE gpkg_contents SET min_x=?, min_y=?, max_x=?, max_y=?,"
+                " last_change=strftime('%Y-%m-%dT%H:%M:%fZ','now')"
+                " WHERE table_name='boundary'",
+                (min(p[1] for p in pts), min(p[0] for p in pts),
+                 max(p[1] for p in pts), max(p[0] for p in pts)))
+    con.commit()
+    con.close()
+
+
 # ---------------------------------------------------------------- KML out
 KML_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -467,6 +519,9 @@ def main():
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--latlon", dest="order", action="store_const", const="latlon")
     g.add_argument("--lonlat", dest="order", action="store_const", const="lonlat")
+    ap.add_argument("--gpkg", metavar="PATH",
+                    help="also load the boundary into this study GeoPackage "
+                         "(replaces any existing boundary feature)")
     ap.set_defaults(order="auto")
     args = ap.parse_args()
 
@@ -593,6 +648,10 @@ def main():
     mx = max(r["crosscheck_dev_pct"] for r in rows)
     print(f" Cross-check spread : {mx:.4f}%  (ellipsoidal vs spherical excess)")
     print("=" * W)
+    if args.gpkg:
+        write_to_gpkg(args.gpkg, polys, rows, lat0, lon0)
+        print(f" Loaded into GeoPackage: {args.gpkg} (layer 'boundary')")
+        print("=" * W)
     print(f" Written: {out}.kml")
     print(f"          {out}_area.csv")
     print(f"          {out}_area.md")

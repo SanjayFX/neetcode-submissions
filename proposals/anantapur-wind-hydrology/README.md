@@ -12,6 +12,8 @@
 | `tools/boundary_kml.py` | Boundary → Google Earth KML + area schedule. |
 | `tools/test_geo.py` | Validation suite for the geodesy in `boundary_kml.py`. |
 | `tools/BOUNDARY_TEMPLATE.csv` | Paste the boundary corner coordinates in here, then run the tool. |
+| `tools/make_gis_workspace.py` | Regenerates the GIS workspace. |
+| `gis_workspace/` | QGIS project + GeoPackage with all 17 study layers. See its own README. |
 
 ## Before issuing the proposal
 
