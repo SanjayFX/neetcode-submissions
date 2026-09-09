@@ -4,8 +4,11 @@
 
 | File | What it is |
 |---|---|
-| `Hydrology_Proposal_Anantapur_Wind_R0.docx` | The techno-commercial proposal (~9,000 words, 19 tables). Rev R0, for internal review before issue. |
-| `tools/build_proposal.js` | Generates the .docx. Edit rates/text here and re-run to regenerate cleanly. |
+| `Hydrology_Proposal_Anantapur_Wind_R0.pdf` | **The issue copy** — 25 pages, for sending to the client. |
+| `Hydrology_Proposal_Anantapur_Wind_R0.docx` | Editable source of the same document (~9,000 words, 19 tables). Rev R0. |
+| `tools/build_proposal.js` | Generates the document. Edit rates/text here and re-run. |
+| `tools/mkpdf.sh` | Two-pass build → .docx + .pdf with correct contents-page numbers. |
+| `tools/toc.json` | Cached heading→page map used by the build. Regenerated automatically. |
 | `tools/boundary_kml.py` | Boundary → Google Earth KML + area schedule. |
 | `tools/test_geo.py` | Validation suite for the geodesy in `boundary_kml.py`. |
 
@@ -19,14 +22,23 @@
 3. **Replace the rates.** All figures in Section 10 are indicative market rates,
    not a quotation. Substitute your own rate card.
 4. **Fill the placeholders** — `[Consultant name]`, `[Client name]`, `[REF/...]`, date.
-5. Open in Word, right-click the Contents table → **Update Field** to populate page numbers.
+5. If you restructure the sections, re-run `mkpdf.sh` so the contents page renumbers.
 
 ## Regenerating the document
 
 ```bash
-npm install docx
-node tools/build_proposal.js Hydrology_Proposal_Anantapur_Wind_R0.docx
+npm install docx                 # once
+./tools/mkpdf.sh Hydrology_Proposal_Anantapur_Wind_R0
 ```
+
+This produces both the .docx and the .pdf. It runs the build twice: the contents
+page carries real page numbers, which are only knowable after the document has been
+laid out, so the script renders, reads back where each heading landed, rebuilds, and
+repeats until pagination stops moving.
+
+Needs `libreoffice-writer` and `poppler-utils` for the PDF step
+(`apt-get install -y libreoffice-writer poppler-utils`). Without them
+`node tools/build_proposal.js out.docx` still produces the .docx on its own.
 
 ## boundary_kml.py
 

@@ -3,6 +3,7 @@ const {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak,
   Table, TableRow, TableCell, WidthType, ShadingType, BorderStyle, LevelFormat,
   Header, Footer, PageNumber, convertInchesToTwip, TableOfContents,
+  Tab, TabStopType, LeaderType,
 } = require('docx');
 
 /* ---------- constants ---------- */
@@ -36,18 +37,29 @@ const RP = (parts, o = {}) => new Paragraph({
   })),
 });
 
-const H1 = (text) => new Paragraph({
+const tocEntries = [];
+let PAGEMAP = {};
+const tocNorm = (t) => String(t).replace(/\s+/g, ' ').trim();
+try {
+  if (process.env.TOC_JSON) {
+    const raw = JSON.parse(fs.readFileSync(process.env.TOC_JSON, 'utf8'));
+    // PDF text extraction collapses runs of whitespace, so match on a normalised key
+    for (const k of Object.keys(raw)) PAGEMAP[tocNorm(k)] = raw[k];
+  }
+} catch (e) { PAGEMAP = {}; }
+
+const H1 = (text) => (tocEntries.push({ text, lvl: 1 }), new Paragraph({
   heading: HeadingLevel.HEADING_1,
   spacing: { before: 320, after: 180 },
   border: { bottom: { style: BorderStyle.SINGLE, size: 10, color: ACCENT, space: 6 } },
   children: [new TextRun({ text, bold: true, size: 28, color: NAVY, font: 'Calibri' })],
-});
+}));
 
-const H2 = (text) => new Paragraph({
+const H2 = (text) => (tocEntries.push({ text, lvl: 2 }), new Paragraph({
   heading: HeadingLevel.HEADING_2,
   spacing: { before: 260, after: 120 },
   children: [new TextRun({ text, bold: true, size: 23, color: ACCENT, font: 'Calibri' })],
-});
+}));
 
 const H3 = (text) => new Paragraph({
   heading: HeadingLevel.HEADING_3,
@@ -209,8 +221,7 @@ children.push(new Paragraph({ children: [new PageBreak()] }));
 
 /* ---- TOC ---- */
 children.push(H1('Contents'));
-children.push(new TableOfContents('Contents', { hyperlink: true, headingStyleRange: '1-2' }));
-children.push(P('(In Microsoft Word, right-click the table above and choose "Update Field" to populate page numbers.)', { italics: true, color: GREY, size: 17, before: 160 }));
+const TOC_AT = children.length;      // static contents spliced in here after all headings are known
 children.push(new Paragraph({ children: [new PageBreak()] }));
 
 /* ---- 1. UNDERSTANDING ---- */
@@ -575,7 +586,7 @@ children.push(NOTE('Basis of the quantities', [
 ]));
 
 children.push(H2('10.1  Option 1 — Full study with UAV LiDAR survey (recommended)'));
-children.push(makeTable([620, 4200, 1300, 1500, 2126], ['Part', 'Description', 'Unit', 'Qty / Rate', 'Amount (₹)'], [
+children.push(makeTable([820, 4000, 1300, 1500, 2126], ['Part', 'Description', 'Unit', 'Qty / Rate', 'Amount (₹)'], [
   ['A', 'Mobilisation, secondary data acquisition, reconnaissance, historical evidence survey, desk review and Inception Report (D1)', 'Lump sum', '—', '6,50,000'],
   ['B', 'UAV LiDAR topographic survey, ground control, bare-earth DTM, 0.5 m contours, orthomosaic and geodatabase (D2)', 'per sq km', '80 @ 48,000', '38,40,000'],
   ['C', 'Detailed ground survey at crossings and hydraulic features; inventory and condition survey of existing structures', 'Lump sum', '—', '4,50,000'],
@@ -592,7 +603,7 @@ children.push(P('Rupees one crore eight lakh seventy thousand only, exclusive of
 
 children.push(H2('10.2  Option 2 — Full study with UAV photogrammetric survey'));
 children.push(P('Identical in every respect except Part B. Photogrammetry derives the terrain surface from imagery rather than laser returns. On this site the vegetation is predominantly low scrub and seasonal agriculture, so a usable bare-earth model is achievable, but ground penetration under thorn scrub and tree cover is poorer and the achievable vertical accuracy is lower.'));
-children.push(makeTable([620, 4200, 1300, 1500, 2126], ['Part', 'Description', 'Unit', 'Qty / Rate', 'Amount (₹)'], [
+children.push(makeTable([820, 4000, 1300, 1500, 2126], ['Part', 'Description', 'Unit', 'Qty / Rate', 'Amount (₹)'], [
   ['B', 'UAV photogrammetric survey, ground control, DTM, contours, orthomosaic and geodatabase (D2)', 'per sq km', '80 @ 22,000', '17,60,000'],
   ['—', 'All other parts (A, C to J) as Option 1', '—', '—', '70,30,000'],
   { cells: ['', 'Total — Option 2 (exclusive of GST)', '', '', '87,90,000'], __bold: true, __fill: 'D9E2F3' },
@@ -664,6 +675,24 @@ children.push(makeTable([4873, 4873], null, [
   ['Designation:  ________________', 'Designation:  ________________'],
   ['Date:  ______________________', 'Date:  ______________________'],
 ]));
+
+/* ---- static table of contents (page numbers resolved by the 2-pass build) ---- */
+const tocParas = tocEntries
+  .filter((e) => e.text !== 'Contents')
+  .map((e) => new Paragraph({
+    spacing: { after: e.lvl === 1 ? 60 : 30, before: e.lvl === 1 ? 90 : 0 },
+    indent: { left: e.lvl === 1 ? 0 : 340 },
+    tabStops: [{ type: TabStopType.RIGHT, position: TW - 40, leader: LeaderType.DOT }],
+    children: [
+      new TextRun({ text: e.text, bold: e.lvl === 1, size: e.lvl === 1 ? 20 : 19,
+                    color: e.lvl === 1 ? NAVY : '404040', font: 'Calibri' }),
+      new TextRun({ children: [new Tab()] }),
+      new TextRun({ text: String(PAGEMAP[tocNorm(e.text)] === undefined ? '' : PAGEMAP[tocNorm(e.text)]),
+                    bold: e.lvl === 1, size: e.lvl === 1 ? 20 : 19,
+                    color: e.lvl === 1 ? NAVY : '404040', font: 'Calibri' }),
+    ],
+  }));
+children.splice(TOC_AT, 0, ...tocParas);
 
 /* ================= ASSEMBLE ================= */
 const doc = new Document({
