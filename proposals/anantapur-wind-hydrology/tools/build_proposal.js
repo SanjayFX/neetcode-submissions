@@ -206,6 +206,7 @@ children.push(makeTable([2600, 7146], null, [
   [[['Proposal reference', { bold: true }]], ' '],
   [[['Revision', { bold: true }]], 'R0 — for Client review'],
   [[['Date of issue', { bold: true }]], ' '],
+  [[['Programme', { bold: true }]], '26 weeks from the effective start date (Section 9)'],
   [[['Validity', { bold: true }]], '60 (sixty) days from date of issue'],
   [[['In response to', { bold: true }]], "Client's e-mail on scope of work, methodology and report submission for Hydrology Studies"],
 ]));
