@@ -1,0 +1,12 @@
+# Project boundary - corner coordinates, one per line, in order around the boundary.
+# Delete these comment lines or leave them; lines starting with # are ignored.
+#
+# Any of these forms work:
+#     14.708300, 77.504200
+#     14 42 29.9 N, 77 30 15.1 E
+#     14°42'29.9"N, 77°30'15.1"E
+#
+# Do not repeat the first point at the end - the ring is closed automatically.
+# Then run:   python3 boundary_kml.py BOUNDARY_TEMPLATE.csv --name "Wind Farm Boundary"
+#
+latitude, longitude

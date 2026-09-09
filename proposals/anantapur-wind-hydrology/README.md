@@ -11,6 +11,7 @@
 | `tools/toc.json` | Cached heading→page map used by the build. Regenerated automatically. |
 | `tools/boundary_kml.py` | Boundary → Google Earth KML + area schedule. |
 | `tools/test_geo.py` | Validation suite for the geodesy in `boundary_kml.py`. |
+| `tools/BOUNDARY_TEMPLATE.csv` | Paste the boundary corner coordinates in here, then run the tool. |
 
 ## Before issuing the proposal
 
@@ -56,6 +57,20 @@ python3 tools/boundary_kml.py boundary.geojson
 
 Accepts KML, KMZ, GeoJSON and plain coordinate lists. (For a shapefile, export to
 KML from QGIS first, or `ogr2ogr -f KML out.kml in.shp`.)
+
+If all you have is a list of corner coordinates, paste them into
+`tools/BOUNDARY_TEMPLATE.csv` and run it on that. Decimal degrees and
+degrees/minutes/seconds both work, in any of these forms:
+
+```
+14.708300, 77.504200
+14 42 29.9 N, 77 30 15.1 E
+14°42'29.9"N, 77°30'15.1"E
+```
+
+Axis order is auto-detected from N/S/E/W markers, or from any value outside
+±90 (which can only be a longitude). If neither is present it assumes lat,lon
+and says so — pass `--lonlat` to override.
 
 Outputs:
 

@@ -292,39 +292,93 @@ def parse_geojson(path):
     return polys
 
 
-def parse_text(path, order):
-    """CSV / TXT of coordinate pairs, one per line."""
-    vals = []
-    with open(path, newline="") as fh:
-        for row in csv.reader(fh):
-            nums = []
-            for cell in row:
-                cell = cell.strip()
-                try:
-                    nums.append(float(cell))
-                except ValueError:
-                    pass
-            if len(nums) >= 2:
-                vals.append((nums[0], nums[1]))
-    if len(vals) < 3:
-        raise SystemExit("Fewer than 3 usable coordinate pairs found in the file.")
+# Matches 14°42'30.5"N  /  14 42 30.5 N  /  N 14d42m30s  /  14:42:30N
+_DMS = re.compile(
+    r"""(?P<pre>[NSEWnsew])?\s*
+        (?P<d>\d{1,3}(?:\.\d+)?)\s*(?:[°dD:\s])\s*
+        (?P<m>\d{1,2}(?:\.\d+)?)\s*(?:['\u2019mM:\s])\s*
+        (?:(?P<s>\d{1,2}(?:\.\d+)?)\s*(?:["\u201dsS])?)?\s*
+        (?P<post>[NSEWnsew])?""",
+    re.VERBOSE)
 
-    if order == "auto":
-        # Latitude is bounded by +/-90; longitude is not. If one column strays
-        # outside +/-90 the ambiguity resolves itself. Otherwise assume lat,lon
-        # (the order coordinates are conventionally written and quoted in India).
-        c0 = [v[0] for v in vals]
-        c1 = [v[1] for v in vals]
-        if max(abs(x) for x in c0) > 90:
-            order = "lonlat"
-        elif max(abs(x) for x in c1) > 90:
-            order = "latlon"
+
+def _dms_to_deg(m):
+    """Convert one DMS regex match to signed decimal degrees, or None."""
+    hemi = (m.group('pre') or m.group('post') or '').upper()
+    if m.group('m') is None:
+        return None
+    deg = float(m.group('d')) + float(m.group('m')) / 60.0 \
+        + (float(m.group('s')) / 3600.0 if m.group('s') else 0.0)
+    if hemi in ('S', 'W'):
+        deg = -deg
+    return deg, hemi
+
+
+def _parse_coord_line(line):
+    """Pull one coordinate pair off a line of text.
+
+    Handles decimal degrees and degrees/minutes/seconds in the forms commonly
+    found in Indian survey and revenue records. Returns (a, b, hemis) or None.
+    """
+    line = line.strip()
+    if not line or line.lstrip().startswith('#'):
+        return None
+
+    dms = [_dms_to_deg(m) for m in _DMS.finditer(line)]
+    dms = [d for d in dms if d]
+    if len(dms) >= 2:
+        return dms[0][0], dms[1][0], (dms[0][1], dms[1][1])
+
+    nums = re.findall(r'[-+]?\d+(?:\.\d+)?', line.replace(',', ' '))
+    hemis = re.findall(r'(?<![A-Za-z])([NSEWnsew])(?![A-Za-z])', line)
+    if len(nums) >= 2:
+        a, b = float(nums[0]), float(nums[1])
+        h = tuple(x.upper() for x in hemis[:2]) if len(hemis) >= 2 else ('', '')
+        if h[0] in ('S',) or (h[0] == '' and False):
+            a = -abs(a)
+        if h[1] in ('W',):
+            b = -abs(b)
+        return a, b, h
+    return None
+
+
+def parse_text(path, order):
+    """CSV / TXT of coordinate pairs, one per line. Decimal or DMS."""
+    vals, hemis = [], []
+    with open(path, newline='') as fh:
+        for line in fh:
+            got = _parse_coord_line(line)
+            if got:
+                vals.append((got[0], got[1]))
+                hemis.append(got[2])
+    if len(vals) < 3:
+        raise SystemExit(
+            f"Only {len(vals)} usable coordinate pair(s) found in {path}; need at least 3.\n"
+            "Expected one coordinate per line, e.g.  14.708300, 77.504200\n"
+            "or  14 42 29.9 N, 77 30 15.1 E")
+
+    if order == 'auto':
+        # An explicit N/S/E/W marker settles it outright.
+        marked = [h for h in hemis if h[0] and h[1]]
+        if marked and all(h[0] in 'NS' and h[1] in 'EW' for h in marked):
+            order = 'latlon'
+        elif marked and all(h[0] in 'EW' and h[1] in 'NS' for h in marked):
+            order = 'lonlat'
         else:
-            order = "latlon"
-            print("  ! Axis order ambiguous - assuming lat,lon. "
-                  "Re-run with --lonlat if the plotted shape looks wrong.",
-                  file=sys.stderr)
-    ring = vals if order == "latlon" else [(b, a) for a, b in vals]
+            # Latitude is bounded by +/-90; longitude is not. If one column
+            # strays outside that, the ambiguity resolves itself.
+            c0 = [v[0] for v in vals]
+            c1 = [v[1] for v in vals]
+            if max(abs(x) for x in c0) > 90:
+                order = 'lonlat'
+            elif max(abs(x) for x in c1) > 90:
+                order = 'latlon'
+            else:
+                order = 'latlon'
+                print("  ! Axis order ambiguous - assuming lat,lon. "
+                      "Re-run with --lonlat if the plotted shape looks wrong.",
+                      file=sys.stderr)
+    ring = vals if order == 'latlon' else [(b, a) for a, b in vals]
     return [{"name": "", "outer": _dedupe_closing(ring), "inners": []}]
 
 
