@@ -21,7 +21,9 @@
    `boundary_kml.py` on the real boundary and restate Parts B and D.
 3. **Replace the rates.** All figures in Section 10 are indicative market rates,
    not a quotation. Substitute your own rate card.
-4. **Fill the placeholders** — `[Consultant name]`, `[Client name]`, `[REF/...]`, date.
+4. **Fill the blank fields on the cover** — Prepared for, Prepared by, Proposal
+   reference, Date of issue. These are deliberately left empty: the document
+   carries no names anywhere, including in its metadata and page footer.
 5. If you restructure the sections, re-run `mkpdf.sh` so the contents page renumbers.
 
 ## Regenerating the document

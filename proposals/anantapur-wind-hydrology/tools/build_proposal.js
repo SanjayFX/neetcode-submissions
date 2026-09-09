@@ -201,11 +201,11 @@ children.push(
 
 children.push(makeTable([2600, 7146], null, [
   [[['Document title', { bold: true }]], 'Techno-Commercial Proposal — Hydrology, Hydraulics & Drainage Design Study'],
-  [[['Prepared for', { bold: true }]], '[Client / Developer name] — to be inserted'],
-  [[['Prepared by', { bold: true }]], '[Consultant name, address, CIN / GSTIN] — to be inserted'],
-  [[['Proposal reference', { bold: true }]], '[REF/HYD/ATP/2026/01]'],
+  [[['Prepared for', { bold: true }]], ' '],
+  [[['Prepared by', { bold: true }]], ' '],
+  [[['Proposal reference', { bold: true }]], ' '],
   [[['Revision', { bold: true }]], 'R0 — for Client review'],
-  [[['Date of issue', { bold: true }]], '[insert date]'],
+  [[['Date of issue', { bold: true }]], ' '],
   [[['Validity', { bold: true }]], '60 (sixty) days from date of issue'],
   [[['In response to', { bold: true }]], "Client's e-mail on scope of work, methodology and report submission for Hydrology Studies"],
 ]));
@@ -668,7 +668,7 @@ children.push(P('We would be glad to discuss any part of this proposal, and can 
 children.push(SPACER(500));
 children.push(makeTable([4873, 4873], null, [
   [[['For and on behalf of', { bold: false }]], [['Accepted for and on behalf of', { bold: false }]]],
-  [[['[Consultant name]', { bold: true }]], [['[Client name]', { bold: true }]]],
+  [' ', ' '],
   [' ', ' '],
   [' ', ' '],
   ['Name:  ______________________', 'Name:  ______________________'],
@@ -696,7 +696,7 @@ children.splice(TOC_AT, 0, ...tocParas);
 
 /* ================= ASSEMBLE ================= */
 const doc = new Document({
-  creator: 'Consultant',
+  creator: '',
   title: 'Techno-Commercial Proposal — Hydrology Study, Wind Project, Anantapur',
   description: 'Hydrology, hydraulics and drainage design study proposal',
   numbering: {
@@ -745,7 +745,7 @@ const doc = new Document({
           alignment: AlignmentType.CENTER,
           border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'BFBFBF', space: 4 } },
           children: [
-            new TextRun({ text: '[Consultant name]   |   Ref [REF/HYD/ATP/2026/01] Rev R0   |   Page ', size: 16, color: GREY, font: 'Calibri' }),
+            new TextRun({ text: 'Rev R0   |   Page ', size: 16, color: GREY, font: 'Calibri' }),
             new TextRun({ children: [PageNumber.CURRENT], size: 16, color: GREY, font: 'Calibri' }),
             new TextRun({ text: ' of ', size: 16, color: GREY, font: 'Calibri' }),
             new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: GREY, font: 'Calibri' }),
